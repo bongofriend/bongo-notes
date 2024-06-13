@@ -8,22 +8,13 @@ import (
 
 type Environment string
 
-const (
-	local Environment = "local"
-)
-
 type Config struct {
-	Port        int
-	localConfig localConfig
-}
-
-type localConfig struct {
-	Port           int
+	Port int
+	Db   struct {
+		Driver string
+		Path   string
+	}
 	IncludeSwagger bool
-}
-
-func (c Config) IncludeSwagger() bool {
-	return c.localConfig.IncludeSwagger
 }
 
 func LoadConfig(configPath string) (*Config, error) {
@@ -35,12 +26,9 @@ func LoadConfig(configPath string) (*Config, error) {
 	if err := viper.ReadInConfig(); err != nil {
 		return nil, err
 	}
-	var c localConfig
+	var c Config
 	if err := viper.Unmarshal(&c); err != nil {
 		return nil, err
 	}
-	return &Config{
-		Port:        c.Port,
-		localConfig: c,
-	}, nil
+	return &c, nil
 }

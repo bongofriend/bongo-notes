@@ -37,7 +37,7 @@ func (a *apiMux) authenticatedHandlerFunc(pattern string, h AuthenticatedHttpHan
 	a.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		user, ok := a.authService.Authenticate(r)
 		if !ok {
-			http.Error(w, "Not authenticated", http.StatusUnauthorized)
+			notAuthenticatedError(w)
 			return
 		}
 		h(user, w, r)

@@ -10,6 +10,8 @@ import (
 
 	"github.com/bongofriend/bongo-notes/backend/lib/api"
 	"github.com/bongofriend/bongo-notes/backend/lib/config"
+	"github.com/bongofriend/bongo-notes/backend/migrations"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 //	@title		Bongo Notes backend
@@ -24,6 +26,10 @@ func main() {
 
 	config, err := getConfig()
 	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := migrations.ApplyMigrations(*config); err != nil {
 		log.Fatal(err)
 	}
 

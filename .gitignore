@@ -1,5 +1,4 @@
 backend/*.config.yaml
 build/
 docs/
-
-
+*.db
