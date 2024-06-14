@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func WriteJson[T any](w http.ResponseWriter, data T) {
+func WriteJson[T any](w http.ResponseWriter, statusCode int, data T) {
 	buf, err := json.Marshal(data)
 
 	if err != nil {
@@ -14,7 +14,7 @@ func WriteJson[T any](w http.ResponseWriter, data T) {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(statusCode)
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(buf)
 }
@@ -29,4 +29,8 @@ func InternalServerError(w http.ResponseWriter) {
 
 func NotAuthenticatedError(w http.ResponseWriter) {
 	http.Error(w, "Not authenticated", http.StatusUnauthorized)
+}
+
+func BadRequestError(w http.ResponseWriter) {
+	http.Error(w, "Bad request", http.StatusBadRequest)
 }

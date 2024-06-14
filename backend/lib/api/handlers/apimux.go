@@ -26,7 +26,7 @@ func NewApiMux(c config.Config, a services.AuthService) *ApiMux {
 
 type AuthenticatedHttpHandlerFunc func(user models.User, w http.ResponseWriter, r *http.Request)
 
-func (a *ApiMux) authenticatedHandlerFunc(pattern string, h AuthenticatedHttpHandlerFunc) {
+func (a *ApiMux) AuthenticatedHandlerFunc(pattern string, h AuthenticatedHttpHandlerFunc) {
 	a.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		user, ok := a.authService.Authenticate(r)
 		if !ok {

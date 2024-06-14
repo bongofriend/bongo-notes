@@ -14,6 +14,11 @@ This is a personal project for personal note taking written with a golang backen
 make config_file_path=local.config.yaml run
 ```
 
+## Default user login
+
+**Username**: admim
+**Pasword:**: admin
+
 ## Configuration
 
 The backend requires configuration in a yaml file and its path is to be provided as an argument during start up. The configuration file follows the following structure:

@@ -18,3 +18,8 @@ clean:
 swagger:
 	@rm -rf docs/
 	@swag init
+
+.PHONY: fmt
+fmt:
+	@go fmt
+	@swag fmt

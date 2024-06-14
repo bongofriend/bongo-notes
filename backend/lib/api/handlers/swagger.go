@@ -29,7 +29,7 @@ func NewSwaggerHandler(c config.Config) ApiHandler {
 }
 
 func (s swaggerHandler) serveSwaggerDefinition(w http.ResponseWriter, r *http.Request) {
-	swaggerDefinitionsPath := filepath.Join(s.projectPath, "..", "..", "docs", "swagger.json")
+	swaggerDefinitionsPath := filepath.Join(s.projectPath, "..", "..", "..", "docs", "swagger.json")
 	if _, err := os.Stat(swaggerDefinitionsPath); err != nil {
 		if os.IsNotExist(err) {
 			httputils.NotFoundError(w)
@@ -45,7 +45,6 @@ func (s swaggerHandler) serveSwaggerDefinition(w http.ResponseWriter, r *http.Re
 		httputils.InternalServerError(w)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
 	w.Header().Add("Content-Type", "application/json")
 	if _, err = w.Write(data); err != nil {
 		log.Println(err)

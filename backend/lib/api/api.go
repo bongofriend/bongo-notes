@@ -14,12 +14,13 @@ import (
 
 func InitApi(appContext context.Context, doneCh chan struct{}, c config.Config) {
 	context, cancel := context.WithCancel(appContext)
+	repoContainer := data.NewRepositoryContainer(c)
+	servicesContainer := services.NewServicesContainer(c, repoContainer)
 
-	userRepo := data.NewUserRepository()
-	authService := services.NewAuthService(userRepo)
-	apiMux := handlers.NewApiMux(c, authService)
+	apiMux := handlers.NewApiMux(c, servicesContainer.AuthService())
 	handlers := []handlers.ApiHandler{
 		handlers.NewSwaggerHandler(c),
+		handlers.NewAuthHandler(servicesContainer),
 	}
 
 	for _, h := range handlers {
@@ -47,5 +48,4 @@ func InitApi(appContext context.Context, doneCh chan struct{}, c config.Config) 
 		log.Fatal(err)
 	}
 	doneCh <- struct{}{}
-
 }

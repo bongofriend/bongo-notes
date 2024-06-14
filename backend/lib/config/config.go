@@ -9,26 +9,27 @@ import (
 type Environment string
 
 type Config struct {
-	Port int
+	Port int `mapstruture:"port"`
 	Db   struct {
-		Driver string
-		Path   string
-	}
+		Driver string `mapstructure:"driver"`
+		Path   string `mapstructure:"path"`
+	} `mapstructure:"db"`
 	IncludeSwagger bool
+	JwtSecret      string `mapstruture:"jwtSecret"`
 }
 
-func LoadConfig(configPath string) (*Config, error) {
+func LoadConfig(configPath string) (Config, error) {
 	_, err := os.Stat(configPath)
 	if err != nil {
-		return nil, err
+		return Config{}, err
 	}
 	viper.SetConfigFile(configPath)
 	if err := viper.ReadInConfig(); err != nil {
-		return nil, err
+		return Config{}, err
 	}
 	var c Config
 	if err := viper.Unmarshal(&c); err != nil {
-		return nil, err
+		return Config{}, err
 	}
-	return &c, nil
+	return c, nil
 }
