@@ -1,4 +1,4 @@
-package api
+package httputils
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func writeJson[T any](w http.ResponseWriter, data T) {
+func WriteJson[T any](w http.ResponseWriter, data T) {
 	buf, err := json.Marshal(data)
 
 	if err != nil {
@@ -19,14 +19,14 @@ func writeJson[T any](w http.ResponseWriter, data T) {
 	w.Write(buf)
 }
 
-func notFoundError(w http.ResponseWriter) {
+func NotFoundError(w http.ResponseWriter) {
 	http.Error(w, "Not found", http.StatusNotFound)
 }
 
-func internalServerError(w http.ResponseWriter) {
+func InternalServerError(w http.ResponseWriter) {
 	http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 }
 
-func notAuthenticatedError(w http.ResponseWriter) {
+func NotAuthenticatedError(w http.ResponseWriter) {
 	http.Error(w, "Not authenticated", http.StatusUnauthorized)
 }

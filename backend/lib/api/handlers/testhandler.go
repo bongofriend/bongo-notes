@@ -1,7 +1,9 @@
-package api
+package handlers
 
 import (
 	"net/http"
+
+	httputils "github.com/bongofriend/bongo-notes/backend/lib/api/utils"
 )
 
 type TestHandler struct{}
@@ -19,13 +21,13 @@ func (t TestHandler) Greet(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]string)
 	data["greet"] = "Hello there"
 
-	writeJson(w, data)
+	httputils.WriteJson(w, data)
 }
 
-func (t TestHandler) Register(a *apiMux) {
+func (t TestHandler) Register(a *ApiMux) {
 	a.HandleFunc("/greet", t.Greet)
 }
 
-func newTestHandler() TestHandler {
+func newTestHandler() ApiHandler {
 	return TestHandler{}
 }

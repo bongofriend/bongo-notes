@@ -1,4 +1,4 @@
-package api
+package handlers
 
 import (
 	"fmt"
@@ -8,53 +8,54 @@ import (
 	"path/filepath"
 	"runtime"
 
+	httputils "github.com/bongofriend/bongo-notes/backend/lib/api/utils"
 	"github.com/bongofriend/bongo-notes/backend/lib/config"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
-type SwaggerHandler struct {
+type swaggerHandler struct {
 	config      config.Config
 	projectPath string
 }
 
-func NewSwaggerHandler(c config.Config) SwaggerHandler {
+func NewSwaggerHandler(c config.Config) ApiHandler {
 	_, b, _, _ := runtime.Caller(0)
 	projectPath := filepath.Dir(b)
 
-	return SwaggerHandler{
+	return swaggerHandler{
 		config:      c,
 		projectPath: projectPath,
 	}
 }
 
-func (s SwaggerHandler) serveSwaggerDefinition(w http.ResponseWriter, r *http.Request) {
+func (s swaggerHandler) serveSwaggerDefinition(w http.ResponseWriter, r *http.Request) {
 	swaggerDefinitionsPath := filepath.Join(s.projectPath, "..", "..", "docs", "swagger.json")
 	if _, err := os.Stat(swaggerDefinitionsPath); err != nil {
 		if os.IsNotExist(err) {
-			notFoundError(w)
+			httputils.NotFoundError(w)
 			return
 		}
 		log.Print(err)
-		internalServerError(w)
+		httputils.InternalServerError(w)
 		return
 	}
 	data, err := os.ReadFile(swaggerDefinitionsPath)
 	if err != nil {
 		log.Println(err)
-		internalServerError(w)
+		httputils.InternalServerError(w)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Add("Content-Type", "application/json")
 	if _, err = w.Write(data); err != nil {
 		log.Println(err)
-		internalServerError(w)
+		httputils.InternalServerError(w)
 		return
 	}
 
 }
 
-func (s SwaggerHandler) Register(a *apiMux) {
+func (s swaggerHandler) Register(a *ApiMux) {
 	if !s.config.IncludeSwagger {
 		log.Println("Skipping swagger UI")
 		return

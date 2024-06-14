@@ -18,7 +18,7 @@ func (r *responseWithStatusCode) WriteHeader(status int) {
 	r.statusCode = status
 }
 
-func loggingMiddleware() middleware {
+func LoggingMiddleware() middleware {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
@@ -32,7 +32,7 @@ func loggingMiddleware() middleware {
 	}
 }
 
-func createMiddlewareStack(middlewares ...middleware) middleware {
+func CreateMiddlewareStack(middlewares ...middleware) middleware {
 	return func(next http.Handler) http.Handler {
 		for i := len(middlewares) - 1; i >= 0; i-- {
 			m := middlewares[i]
