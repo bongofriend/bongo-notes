@@ -16,7 +16,8 @@ make config_file_path=local.config.yaml run
 
 ## Default user login
 
-**Username**: admim
+**Username**: admin
+
 **Pasword:**: admin
 
 ## Configuration
