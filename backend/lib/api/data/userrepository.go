@@ -30,7 +30,6 @@ func NewUserRepository(db *sqlx.DB) UserRepository {
 	}
 }
 
-// TODO
 func (u userRepositoryImpl) FindUserById(id int32) (models.User, error) {
 	var userEntity userEntity
 	if err := u.db.Get(&userEntity, "SELECT rowid, username, password FROM users WHERE rowid = $1", id); err != nil {

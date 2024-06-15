@@ -58,7 +58,6 @@ func extractAuthToken(r *http.Request) (string, bool) {
 	return bearerToken, true
 }
 
-// TODO
 func (a authServiceImpl) decodeToken(tokenString string) (int32, error) {
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {

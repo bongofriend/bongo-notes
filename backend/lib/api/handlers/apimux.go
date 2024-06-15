@@ -15,8 +15,6 @@ type ApiMux struct {
 	authService services.AuthService
 }
 
-//TODO Add additional services
-
 func NewApiMux(c config.Config, a services.AuthService) *ApiMux {
 	return &ApiMux{
 		config:      c,

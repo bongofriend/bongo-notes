@@ -36,7 +36,7 @@ type loginSuccessResponse struct {
 
 // Login godoc
 //
-//	@Summary	Login with user creditianls
+//	@Summary	Login with user credentials
 //	@Tags		auth
 //	@Router		/login [post]
 //	@Param		logindata	formData	handlers.loginRequest	true	"User login"
@@ -84,7 +84,7 @@ func extractLoginDetails(r *http.Request) (loginRequest, bool) {
 
 // Greet godoc
 //
-//	@Summary	Login with user creditianls
+//	@Summary	Greet the user
 //	@Tags		auth
 //	@Router		/greet [get]
 //	@Security	BearerAuth
