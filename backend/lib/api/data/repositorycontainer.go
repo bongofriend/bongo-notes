@@ -8,15 +8,21 @@ import (
 )
 
 type repositoryContainerImpl struct {
-	userRepository UserRepository
+	userRepository      UserRepository
+	notebooksRepository NotebooksRepository
 }
 
 type RepositoryContainer interface {
 	UserRepository() UserRepository
+	NotebooksRepository() NotebooksRepository
 }
 
 func (r repositoryContainerImpl) UserRepository() UserRepository {
 	return r.userRepository
+}
+
+func (r repositoryContainerImpl) NotebooksRepository() NotebooksRepository {
+	return r.notebooksRepository
 }
 
 func NewRepositoryContainer(c config.Config) RepositoryContainer {
@@ -25,6 +31,7 @@ func NewRepositoryContainer(c config.Config) RepositoryContainer {
 		log.Fatal(err)
 	}
 	return repositoryContainerImpl{
-		userRepository: NewUserRepository(db),
+		userRepository:      NewUserRepository(db),
+		notebooksRepository: NewNotebooksRepository(db),
 	}
 }
