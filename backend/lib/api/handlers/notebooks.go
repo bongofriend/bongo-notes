@@ -17,6 +17,7 @@ type notebooksHandler struct {
 // Register implements ApiHandler.
 func (n notebooksHandler) Register(mux *ApiMux) {
 	mux.AuthenticatedHandlerFunc("GET /notebooks", n.GetNotebooks)
+	mux.AuthenticatedHandlerFunc("POST /notebooks", n.CreateNewNotebook)
 }
 
 func NewNotebooksHandler(services services.ServicesContainer) ApiHandler {

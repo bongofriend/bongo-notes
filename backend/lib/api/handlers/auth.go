@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/bongofriend/bongo-notes/backend/lib/api/models"
 	"github.com/bongofriend/bongo-notes/backend/lib/api/services"
 	httputils "github.com/bongofriend/bongo-notes/backend/lib/api/utils"
 )
@@ -16,7 +14,6 @@ type authHandler struct {
 
 func (a authHandler) Register(m *ApiMux) {
 	m.HandleFunc("POST /login", a.Login)
-	m.AuthenticatedHandlerFunc("/greet", a.Greet)
 }
 
 func NewAuthHandler(srvContainer services.ServicesContainer) ApiHandler {
@@ -80,17 +77,4 @@ func extractLoginDetails(r *http.Request) (loginRequest, bool) {
 		Username: username,
 		Password: password,
 	}, true
-}
-
-// Greet godoc
-//
-//	@Summary	Greet the user
-//	@Tags		auth
-//	@Router		/greet [get]
-//	@Security	BearerAuth
-func (a authHandler) Greet(user models.User, w http.ResponseWriter, r *http.Request) {
-	rsp := map[string]string{
-		"msg": fmt.Sprintf("Hello, %s", user.Username),
-	}
-	httputils.WriteJson(w, http.StatusAccepted, rsp)
 }

@@ -1,6 +1,9 @@
 package services
 
 import (
+	"errors"
+	"strings"
+
 	"github.com/bongofriend/bongo-notes/backend/lib/api/data"
 	"github.com/bongofriend/bongo-notes/backend/lib/api/models"
 )
@@ -20,10 +23,15 @@ func NewNotebooksService(notebooksRepo data.NotebooksRepository) NotebookService
 	}
 }
 
-func (n notebooksServiceImpl) CreateNotebook(user models.User, title string, descroption string) error {
-	panic("unimplemented")
+func (n notebooksServiceImpl) CreateNotebook(user models.User, title string, description string) error {
+	cleanTitle := strings.Trim(title, "")
+	cleanDesc := strings.Trim(description, "")
+	if len(cleanTitle) == 0 || len(cleanDesc) == 0 {
+		return errors.New("notebook title or description was empty")
+	}
+	return n.notebooksRepo.CreateNotebook(int32(user.Id), title, description)
 }
 
 func (n notebooksServiceImpl) FetchNotebooks(user models.User) ([]models.Notebook, error) {
-	panic("unimplemented")
+	return n.notebooksRepo.FetchByUserId(int32(user.Id))
 }

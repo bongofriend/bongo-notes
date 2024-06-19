@@ -21,6 +21,7 @@ func InitApi(appContext context.Context, doneCh chan struct{}, c config.Config) 
 	handlers := []handlers.ApiHandler{
 		handlers.NewSwaggerHandler(c),
 		handlers.NewAuthHandler(servicesContainer),
+		handlers.NewNotebooksHandler(servicesContainer),
 	}
 
 	for _, h := range handlers {
