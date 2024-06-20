@@ -8,6 +8,7 @@ import (
 type NotebooksRepository interface {
 	FetchByUserId(userId int32) ([]models.Notebook, error)
 	CreateNotebook(userId int32, title string, description string) error
+	HasNotebook(userId int32, notebookId int32) (bool, error)
 }
 
 type notebooksRepositoryImpl struct {
@@ -55,4 +56,13 @@ func (n notebooksRepositoryImpl) FetchByUserId(userId int32) ([]models.Notebook,
 		notebooks = append(notebooks, notebookModel)
 	}
 	return notebooks, nil
+}
+
+// HasNotebook implements NotebooksRepository.
+func (n notebooksRepositoryImpl) HasNotebook(userId int32, notebookId int32) (bool, error) {
+	var count int32
+	if err := n.db.Get(&count, "SELECT COUNT(*) FROM notebooks WHERE rowid = $1 and creator_id = $2", notebookId, userId); err != nil {
+		return false, err
+	}
+	return count == 1, nil
 }
