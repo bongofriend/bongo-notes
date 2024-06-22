@@ -14,8 +14,9 @@ type Config struct {
 		Driver string `mapstructure:"driver"`
 		Path   string `mapstructure:"path"`
 	} `mapstructure:"db"`
-	IncludeSwagger bool
-	JwtSecret      string `mapstruture:"jwtSecret"`
+	IncludeSwagger  bool
+	JwtSecret       string `mapstruture:"jwtSecret"`
+	NotesFolderPath string `mapstructure:"notesPath"`
 }
 
 func LoadConfig(configPath string) (Config, error) {

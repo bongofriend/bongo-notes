@@ -22,6 +22,7 @@ func InitApi(appContext context.Context, doneCh chan struct{}, c config.Config) 
 		handlers.NewSwaggerHandler(c),
 		handlers.NewAuthHandler(servicesContainer),
 		handlers.NewNotebooksHandler(servicesContainer),
+		handlers.NewNotesHandler(servicesContainer),
 	}
 
 	for _, h := range handlers {
@@ -44,6 +45,17 @@ func InitApi(appContext context.Context, doneCh chan struct{}, c config.Config) 
 	}()
 
 	<-context.Done()
+	serviceDoneCh := make(chan struct{})
+	repoDoneCh := make(chan struct{})
+
+	log.Println("Shuttting down services")
+	servicesContainer.Shutdown(serviceDoneCh)
+	<-serviceDoneCh
+
+	log.Println("Shutting down database")
+	repoContainer.Shutdown(repoDoneCh)
+	<-repoDoneCh
+
 	log.Println("Shutting down API")
 	if err := server.Shutdown(appContext); err != nil {
 		log.Fatal(err)

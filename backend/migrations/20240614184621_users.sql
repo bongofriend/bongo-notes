@@ -1,6 +1,7 @@
 -- +goose Up
 -- +goose StatementBegin
 CREATE TABLE users(
+    id text not null unique,
     username text not null,
     password text not null,
     created_at timestamp not null default (strftime('%s','now')), --TODO: Correct data type for timestamps

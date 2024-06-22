@@ -29,9 +29,9 @@ func (n notebooksServiceImpl) CreateNotebook(user models.User, title string, des
 	if len(cleanTitle) == 0 || len(cleanDesc) == 0 {
 		return errors.New("notebook title or description was empty")
 	}
-	return n.notebooksRepo.CreateNotebook(int32(user.Id), title, description)
+	return n.notebooksRepo.CreateNotebook(user.Id, title, description)
 }
 
 func (n notebooksServiceImpl) FetchNotebooks(user models.User) ([]models.Notebook, error) {
-	return n.notebooksRepo.FetchByUserId(int32(user.Id))
+	return n.notebooksRepo.FetchByUserId(user.Id)
 }

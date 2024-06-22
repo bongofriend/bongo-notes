@@ -11,6 +11,7 @@ import (
 	"github.com/bongofriend/bongo-notes/backend/lib/api/models"
 	"github.com/bongofriend/bongo-notes/backend/lib/config"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -58,7 +59,7 @@ func extractAuthToken(r *http.Request) (string, bool) {
 	return bearerToken, true
 }
 
-func (a authServiceImpl) decodeToken(tokenString string) (int32, error) {
+func (a authServiceImpl) decodeToken(tokenString string) (uuid.UUID, error) {
 	token, err := jwt.Parse(tokenString, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected sigining method: %s", t.Header["alg"])
@@ -66,21 +67,25 @@ func (a authServiceImpl) decodeToken(tokenString string) (int32, error) {
 		return []byte(a.c.JwtSecret), nil
 	})
 	if err != nil {
-		return -1, err
+		return uuid.Nil, err
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
-		return -1, errors.New("JWT could not be parsed")
+		return uuid.Nil, errors.New("JWT could not be parsed")
 	}
 	userId, ok := claims["userId"]
 	if !ok {
-		return -1, errors.New("UserId not found in JWT claims")
+		return uuid.Nil, errors.New("UserId not found in JWT claims")
 	}
-	id, ok := userId.(float64)
+	id, ok := userId.(string)
 	if !ok {
-		return -1, errors.New("could not parse userId in JWT claims")
+		return uuid.Nil, errors.New("could not parse userId in JWT claims")
 	}
-	return int32(id), nil
+	userUUID, err := uuid.Parse(id)
+	if err != nil {
+		return uuid.Nil, errors.New("could not parse userId in JWT claims")
+	}
+	return userUUID, nil
 }
 
 func (u authServiceImpl) GenerateToken(username string, password string) (string, error) {

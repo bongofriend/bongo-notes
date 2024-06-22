@@ -28,6 +28,7 @@ The backend requires configuration in a yaml file and its path is to be provided
 includeSwagger: true #Enable swagger for endpoints
 port: 8888 #Port for server
 jwtSecret: SomeSecret #Secret for generating JWT
+notesPath: SomePath #Path to folder where notes are stored
 db:
   driver: sqlite3 #Database driver
   path: ./local.db #Location of sqlite3 database

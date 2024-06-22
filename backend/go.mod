@@ -4,6 +4,8 @@ go 1.22.0
 
 require github.com/pressly/goose/v3 v3.20.0
 
+require github.com/google/uuid v1.6.0 // indirect
+
 require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect

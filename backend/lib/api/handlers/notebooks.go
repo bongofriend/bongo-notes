@@ -55,7 +55,7 @@ type createNewnNotebookRequest struct {
 	Description string `json:"description"`
 }
 
-// GetNotebooks godoc
+// CreateNewNotebooks godoc
 //
 //	@Summary	Create new notebook
 //	@Tags		notebooks

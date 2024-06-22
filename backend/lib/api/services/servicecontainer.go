@@ -15,6 +15,11 @@ type ServicesContainer interface {
 	AuthService() AuthService
 	NotebooksService() NotebookService
 	NotesService() NotesService
+	Shutdown(chan struct{})
+}
+
+func (s servicesContainerImpl) Shutdown(doneCh chan struct{}) {
+	doneCh <- struct{}{}
 }
 
 func (s servicesContainerImpl) AuthService() AuthService {

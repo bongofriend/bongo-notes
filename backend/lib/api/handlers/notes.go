@@ -1,15 +1,14 @@
 package handlers
 
 import (
-	"errors"
+	"encoding/json"
 	"log"
-	"mime/multipart"
 	"net/http"
-	"strconv"
 
 	"github.com/bongofriend/bongo-notes/backend/lib/api/models"
 	"github.com/bongofriend/bongo-notes/backend/lib/api/services"
 	httputils "github.com/bongofriend/bongo-notes/backend/lib/api/utils"
+	"github.com/google/uuid"
 )
 
 type notesHandler struct {
@@ -18,7 +17,8 @@ type notesHandler struct {
 
 // Register implements ApiHandler.
 func (n notesHandler) Register(m *ApiMux) {
-	m.AuthenticatedHandlerFunc("POST /notes/{notebook_id}", n.CreateNewNote)
+	m.AuthenticatedHandlerFunc("POST /notes/{notebookId}", n.CreateNewNote)
+	m.AuthenticatedHandlerFunc("GET /notes/{notebookId}", n.GetNotesForNotebook)
 }
 
 func NewNotesHandler(s services.ServicesContainer) ApiHandler {
@@ -28,35 +28,36 @@ func NewNotesHandler(s services.ServicesContainer) ApiHandler {
 }
 
 type createNoteRequest struct {
-	Title string                `form:"title"`
-	File  *multipart.FileHeader `form:"note"`
+	Title   string `json:"title"`
+	Content string `json:"content"`
 }
 
 func postCreateNewNoteParams(r *http.Request) (createNoteRequest, error) {
-	if err := r.ParseForm(); err != nil {
+	var params createNoteRequest
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&params); err != nil {
+		log.Println(err)
 		return createNoteRequest{}, err
 	}
-	title := r.FormValue("title")
-	if title == "" {
-		return createNoteRequest{}, errors.New("note title was empty")
-	}
-	_, header, err := r.FormFile("note")
-	if err != nil {
-		return createNoteRequest{}, err
-	}
-	return createNoteRequest{
-		Title: title,
-		File:  header,
-	}, nil
+	return params, nil
 }
 
+// CreateNewNote godoc
+//
+//	@Summary	Create a new note for a notebook
+//	@Tags		notes
+//	@Router		/notes/{notebookId} [post]
+//	@Param		noteParams	body	handlers.createNoteRequest	true	"Parameters for creating a new note"
+//	@Param		notebookId	path	string						true	"Notebook Id for new note"
+//	@Success	200
+//	@Security	BearerAuth
 func (n notesHandler) CreateNewNote(user models.User, w http.ResponseWriter, r *http.Request) {
-	notebookIdPath := r.PathValue("notebook_id")
+	notebookIdPath := r.PathValue("notebookId")
 	if notebookIdPath == "" {
 		httputils.NotFoundError(w)
 		return
 	}
-	notebookId, err := strconv.Atoi(notebookIdPath)
+	notebookId, err := uuid.Parse(notebookIdPath)
 	if err != nil {
 		httputils.NotFoundError(w)
 		return
@@ -67,10 +68,45 @@ func (n notesHandler) CreateNewNote(user models.User, w http.ResponseWriter, r *
 		httputils.BadRequestError(w)
 		return
 	}
-	if err := n.notesService.AddNoteToNotebook(user, int32(notebookId), params.Title, params.File); err != nil {
+	if err := n.notesService.AddNoteToNotebook(user, notebookId, params.Title, params.Content); err != nil {
 		log.Println(err)
 		httputils.InternalServerError(w)
 		return
 	}
 	w.WriteHeader(http.StatusAccepted)
+}
+
+type getNotesForNotebookResponse struct {
+	Notes []models.Note `json:"notes"`
+}
+
+// GetNotes godoc
+//
+//	@Summary	Get notes for notebook
+//	@Tags		notes
+//	@Router		/notes/{notebookId} [get]
+//	@Param		notebookId	path		string	true	"Notebook Id for new note"
+//	@Success	200			{object}	handlers.getNotesForNotebookResponse
+//	@Security	BearerAuth
+func (n notesHandler) GetNotesForNotebook(user models.User, w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("notebookId")
+	if id == "" {
+		httputils.BadRequestError(w)
+		return
+	}
+	notebookId, err := uuid.Parse(id)
+	if err != nil {
+		httputils.BadRequestError(w)
+		return
+	}
+	notes, err := n.notesService.FetchNotes(user, notebookId)
+	if err != nil {
+		log.Println(err)
+		httputils.BadRequestError(w)
+		return
+	}
+	rsp := getNotesForNotebookResponse{
+		Notes: notes,
+	}
+	httputils.WriteJson(w, http.StatusOK, rsp)
 }

@@ -8,15 +8,23 @@ import (
 )
 
 type repositoryContainerImpl struct {
+	db                  *sqlx.DB
 	userRepository      UserRepository
 	notebooksRepository NotebooksRepository
 	notesRepository     NotesRepository
+}
+
+// Shutdown implements RepositoryContainer.
+func (r repositoryContainerImpl) Shutdown(doneCh chan struct{}) {
+	r.db.Close()
+	doneCh <- struct{}{}
 }
 
 type RepositoryContainer interface {
 	UserRepository() UserRepository
 	NotebooksRepository() NotebooksRepository
 	NotesRepository() NotesRepository
+	Shutdown(chan struct{})
 }
 
 func (r repositoryContainerImpl) UserRepository() UserRepository {
@@ -37,6 +45,7 @@ func NewRepositoryContainer(c config.Config) RepositoryContainer {
 		log.Fatal(err)
 	}
 	return repositoryContainerImpl{
+		db:                  db,
 		userRepository:      NewUserRepository(db),
 		notebooksRepository: NewNotebooksRepository(db),
 		notesRepository:     NewNotesRepository(db),
