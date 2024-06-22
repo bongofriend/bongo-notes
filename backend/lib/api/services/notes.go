@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -58,6 +59,7 @@ func (n notesServiceImpl) AddNoteToNotebook(user models.User, notebookId uuid.UU
 }
 
 func isValidNote(content string) (bool, error) {
+	log.Println(content)
 	return true, nil
 }
 

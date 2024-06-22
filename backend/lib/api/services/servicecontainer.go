@@ -34,6 +34,7 @@ func (s servicesContainerImpl) NotesService() NotesService {
 	return s.notesService
 }
 
+// TODO Better way to serialize errors to responses
 func NewServicesContainer(c config.Config, r data.RepositoryContainer) servicesContainerImpl {
 	return servicesContainerImpl{
 		authService:      NewAuthService(c, r.UserRepository()),
