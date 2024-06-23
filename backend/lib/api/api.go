@@ -12,10 +12,12 @@ import (
 	"github.com/bongofriend/bongo-notes/backend/lib/config"
 )
 
-func InitApi(appContext context.Context, doneCh chan struct{}, c config.Config) {
-	context, cancel := context.WithCancel(appContext)
+func InitApi(appContext context.Context, errCh chan struct{}, doneCh chan struct{}, c config.Config) {
 	repoContainer := data.NewRepositoryContainer(c)
 	servicesContainer := services.NewServicesContainer(c, repoContainer)
+	serviceDoneCh := make(chan struct{})
+	repoDoneCh := make(chan struct{})
+	muxDoneCh := make(chan struct{})
 
 	apiMux := handlers.NewApiMux(c, servicesContainer.AuthService())
 	handlers := []handlers.ApiHandler{
@@ -40,25 +42,30 @@ func InitApi(appContext context.Context, doneCh chan struct{}, c config.Config) 
 	go func() {
 		if err := server.ListenAndServe(); err != nil {
 			log.Println(err)
-			cancel()
+			errCh <- struct{}{}
 		}
 	}()
 
-	<-context.Done()
-	serviceDoneCh := make(chan struct{})
-	repoDoneCh := make(chan struct{})
-
+	<-appContext.Done()
 	log.Println("Shuttting down services")
-	servicesContainer.Shutdown(serviceDoneCh)
+	go servicesContainer.Shutdown(serviceDoneCh)
 	<-serviceDoneCh
 
 	log.Println("Shutting down database")
-	repoContainer.Shutdown(repoDoneCh)
+	go repoContainer.Shutdown(repoDoneCh)
 	<-repoDoneCh
 
 	log.Println("Shutting down API")
-	if err := server.Shutdown(appContext); err != nil {
-		log.Fatal(err)
-	}
+	go func() {
+		if err := server.Shutdown(appContext); err != nil {
+			log.Println(err)
+			errCh <- struct{}{}
+		}
+		muxDoneCh <- struct{}{}
+	}()
+	<-muxDoneCh
+	close(repoDoneCh)
+	close(serviceDoneCh)
+	close(muxDoneCh)
 	doneCh <- struct{}{}
 }

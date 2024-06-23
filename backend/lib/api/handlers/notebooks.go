@@ -2,12 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/bongofriend/bongo-notes/backend/lib/api/models"
 	"github.com/bongofriend/bongo-notes/backend/lib/api/services"
-	httputils "github.com/bongofriend/bongo-notes/backend/lib/api/utils"
 )
 
 type notebooksHandler struct {
@@ -16,8 +14,8 @@ type notebooksHandler struct {
 
 // Register implements ApiHandler.
 func (n notebooksHandler) Register(mux *ApiMux) {
-	mux.AuthenticatedHandlerFunc("GET /notebooks", n.GetNotebooks)
-	mux.AuthenticatedHandlerFunc("POST /notebooks", n.CreateNewNotebook)
+	mux.AuthenticatedServiceResponseHandlerFunc("GET /notebooks", n.GetNotebooks)
+	mux.AuthenticatedServiceResponseHandlerFunc("POST /notebooks", n.CreateNewNotebook)
 }
 
 func NewNotebooksHandler(services services.ServicesContainer) ApiHandler {
@@ -36,18 +34,18 @@ type getNotebooksResponse struct {
 //	@Tags		notebooks
 //	@Router		/notebooks [get]
 //	@Success	200	{object}	handlers.getNotebooksResponse
+//	@Failure	400
+//	 @Failure 401
 //	@Security	BearerAuth
-func (n notebooksHandler) GetNotebooks(user models.User, w http.ResponseWriter, r *http.Request) {
+func (n notebooksHandler) GetNotebooks(user models.User, r *http.Request) ServiceResponse {
 	notebooks, err := n.notebooksService.FetchNotebooks(user)
 	if err != nil {
-		log.Println(err)
-		httputils.BadRequestError(w)
-		return
+		return BadRequest(err)
 	}
 	rsp := getNotebooksResponse{
 		Notebooks: notebooks,
 	}
-	httputils.WriteJson(w, http.StatusOK, rsp)
+	return Success(http.StatusOK, rsp)
 }
 
 type createNewnNotebookRequest struct {
@@ -57,26 +55,24 @@ type createNewnNotebookRequest struct {
 
 // CreateNewNotebooks godoc
 //
-//	@Summary	Create new notebook
-//	@Tags		notebooks
-//	@Router		/notebooks [post]
-//	@Param		noteboolDetails	body	handlers.createNewnNotebookRequest	true	"Parameters for creating a new new notebook"
-//	@Success	200
-//	@Failure	401
-//	@Security	BearerAuth
-func (n notebooksHandler) CreateNewNotebook(user models.User, w http.ResponseWriter, r *http.Request) {
+//		@Summary	Create new notebook
+//		@Tags		notebooks
+//		@Router		/notebooks [post]
+//		@Param		noteboolDetails	body	handlers.createNewnNotebookRequest	true	"Parameters for creating a new new notebook"
+//		@Success	200
+//		@Failure	400
+//	 @Failure 401
+//		@Security	BearerAuth
+func (n notebooksHandler) CreateNewNotebook(user models.User, r *http.Request) ServiceResponse {
 	decoder := json.NewDecoder(r.Body)
 	var params createNewnNotebookRequest
 	if err := decoder.Decode(&params); err != nil {
-		log.Println(err)
-		httputils.BadRequestError(w)
-		return
+		return BadRequest(err)
 	}
 	if err := n.notebooksService.CreateNotebook(user, params.Title, params.Description); err != nil {
-		log.Println(err)
-		httputils.InternalServerError(w)
+		return InternalServerError(err)
 	} else {
-		w.WriteHeader(http.StatusOK)
+		return Ok()
 	}
 
 }

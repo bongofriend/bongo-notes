@@ -1,11 +1,9 @@
 package handlers
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/bongofriend/bongo-notes/backend/lib/api/services"
-	httputils "github.com/bongofriend/bongo-notes/backend/lib/api/utils"
 )
 
 type authHandler struct {
@@ -13,7 +11,7 @@ type authHandler struct {
 }
 
 func (a authHandler) Register(m *ApiMux) {
-	m.HandleFunc("POST /login", a.Login)
+	m.ServiceResponseHandlerFunc("POST /login", a.Login)
 }
 
 func NewAuthHandler(srvContainer services.ServicesContainer) ApiHandler {
@@ -41,27 +39,24 @@ type loginSuccessResponse struct {
 //	@Success	200			{object}	handlers.loginSuccessResponse
 //
 //	@Failure	400
-func (a authHandler) Login(w http.ResponseWriter, r *http.Request) {
+//
+// @Failure 500
+func (a authHandler) Login(r *http.Request) ServiceResponse {
 	if err := r.ParseForm(); err != nil {
-		log.Println(err)
-		httputils.BadRequestError(w)
-		return
+		return BadRequest(err)
 	}
 	l, ok := extractLoginDetails(r)
 	if !ok {
-		httputils.BadRequestError(w)
-		return
+		return BadRequest(nil)
 	}
 	token, err := a.authService.GenerateToken(l.Username, l.Password)
 	if err != nil {
-		log.Println(err)
-		httputils.InternalServerError(w)
-		return
+		return BadRequest(err)
 	}
 	rsp := loginSuccessResponse{
 		Token: token,
 	}
-	httputils.WriteJson(w, http.StatusAccepted, rsp)
+	return Success(http.StatusAccepted, rsp)
 }
 
 func extractLoginDetails(r *http.Request) (loginRequest, bool) {

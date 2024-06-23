@@ -36,12 +36,24 @@ func main() {
 		log.Fatal(err)
 	}
 
+	errCh := make(chan struct{})
 	doneCh := make(chan struct{})
-	go api.InitApi(appContext, doneCh, config)
+	go api.InitApi(appContext, errCh, doneCh, config)
 
-	<-signalCh
-	cancel()
-	<-doneCh
+	defer func() {
+		cancel()
+		<-doneCh
+		close(doneCh)
+		close(signalCh)
+		close(errCh)
+	}()
+
+	select {
+	case <-signalCh: //Signal received from OS for termination; cancel and wait for completion
+		return
+	case <-errCh: //Service encountered error during start up; cancel and wait for completion
+		return
+	}
 }
 
 func getConfig() (config.Config, error) {

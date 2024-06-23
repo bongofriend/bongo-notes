@@ -58,6 +58,7 @@ func (n notesServiceImpl) AddNoteToNotebook(user models.User, notebookId uuid.UU
 	return n.notesRepo.AddNote(notebookId, noteId, noteTitle, filePath)
 }
 
+// TODO
 func isValidNote(content string) (bool, error) {
 	log.Println(content)
 	return true, nil
