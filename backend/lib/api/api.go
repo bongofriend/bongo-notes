@@ -31,7 +31,7 @@ func InitApi(appContext context.Context, errCh chan struct{}, doneCh chan struct
 		h.Register(apiMux)
 	}
 
-	middlewares := CreateMiddlewareStack(LoggingMiddleware())
+	middlewares := CreateMiddlewareStack(Logger)
 
 	server := &http.Server{
 		Handler: middlewares(apiMux),

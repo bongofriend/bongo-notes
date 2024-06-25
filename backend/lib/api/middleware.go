@@ -18,18 +18,16 @@ func (r *responseWithStatusCode) WriteHeader(status int) {
 	r.statusCode = status
 }
 
-func LoggingMiddleware() middleware {
-	return func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			start := time.Now()
-			rsp := &responseWithStatusCode{
-				ResponseWriter: w,
-				statusCode:     http.StatusOK,
-			}
-			h.ServeHTTP(rsp, r)
-			log.Println(rsp.statusCode, r.Method, r.URL.Path, time.Since(start))
-		})
-	}
+func Logger(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		rsp := &responseWithStatusCode{
+			ResponseWriter: w,
+			statusCode:     http.StatusOK,
+		}
+		h.ServeHTTP(rsp, r)
+		log.Println(rsp.statusCode, r.Method, r.URL.Path, time.Since(start))
+	})
 }
 
 func CreateMiddlewareStack(middlewares ...middleware) middleware {
