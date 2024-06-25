@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/bongofriend/bongo-notes/backend/lib/api/data"
+	"github.com/bongofriend/bongo-notes/backend/lib/api/db"
 	"github.com/bongofriend/bongo-notes/backend/lib/api/models"
 )
 
@@ -14,10 +14,10 @@ type NotebookService interface {
 }
 
 type notebooksServiceImpl struct {
-	notebooksRepo data.NotebooksRepository
+	notebooksRepo db.NotebooksRepository
 }
 
-func NewNotebooksService(notebooksRepo data.NotebooksRepository) NotebookService {
+func NewNotebooksService(notebooksRepo db.NotebooksRepository) NotebookService {
 	return notebooksServiceImpl{
 		notebooksRepo: notebooksRepo,
 	}

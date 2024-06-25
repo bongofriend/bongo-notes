@@ -1,4 +1,4 @@
-package data
+package db
 
 import (
 	"log"
@@ -12,6 +12,7 @@ type repositoryContainerImpl struct {
 	userRepository      UserRepository
 	notebooksRepository NotebooksRepository
 	notesRepository     NotesRepository
+	diffingRepository   DiffingRepository
 }
 
 // Shutdown implements RepositoryContainer.
@@ -24,6 +25,7 @@ type RepositoryContainer interface {
 	UserRepository() UserRepository
 	NotebooksRepository() NotebooksRepository
 	NotesRepository() NotesRepository
+	DiffingRespository() DiffingRepository
 	Shutdown(chan struct{})
 }
 
@@ -39,6 +41,10 @@ func (r repositoryContainerImpl) NotesRepository() NotesRepository {
 	return r.notesRepository
 }
 
+func (r repositoryContainerImpl) DiffingRespository() DiffingRepository {
+	return r.diffingRepository
+}
+
 func NewRepositoryContainer(c config.Config) RepositoryContainer {
 	db, err := sqlx.Connect(c.Db.Driver, c.Db.Path)
 	if err != nil {
@@ -49,5 +55,6 @@ func NewRepositoryContainer(c config.Config) RepositoryContainer {
 		userRepository:      NewUserRepository(db),
 		notebooksRepository: NewNotebooksRepository(db),
 		notesRepository:     NewNotesRepository(db),
+		diffingRepository:   NewDiffingRepository(db),
 	}
 }

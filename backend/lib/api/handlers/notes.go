@@ -103,3 +103,8 @@ func (n notesHandler) GetNotesForNotebook(user models.User, r *http.Request) Ser
 	}
 	return Success(http.StatusOK, rsp)
 }
+
+// TODO
+func UpdateNote(user models.User, r *http.Request) ServiceResponse {
+	panic("not implemented")
+}

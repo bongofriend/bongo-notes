@@ -5,6 +5,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"os/exec"
 	"os/signal"
 	"syscall"
 
@@ -23,6 +24,11 @@ import (
 // @in							header
 // @name						Authorization
 func main() {
+	missingBinary, ok := validateEnvironment()
+	if !ok {
+		log.Fatalf("%s not found", missingBinary)
+	}
+
 	appContext, cancel := context.WithCancel(context.Background())
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
@@ -66,4 +72,20 @@ func getConfig() (config.Config, error) {
 	}
 	return config, nil
 
+}
+
+func validateEnvironment() (string, bool) {
+	binaries := []string{"diff", "patch"}
+	for _, b := range binaries {
+		if !isCommandAvailable(b) {
+			return b, false
+		}
+	}
+	return "", true
+}
+
+func isCommandAvailable(cmd string) bool {
+	res, err := exec.LookPath(cmd)
+	log.Println(err)
+	return err != nil || res == ""
 }

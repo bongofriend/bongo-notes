@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/bongofriend/bongo-notes/backend/lib/api/data"
+	"github.com/bongofriend/bongo-notes/backend/lib/api/db"
 	"github.com/bongofriend/bongo-notes/backend/lib/api/models"
 	"github.com/bongofriend/bongo-notes/backend/lib/config"
 	"github.com/golang-jwt/jwt/v5"
@@ -22,10 +22,10 @@ type AuthService interface {
 
 type authServiceImpl struct {
 	c        config.Config
-	userRepo data.UserRepository
+	userRepo db.UserRepository
 }
 
-func NewAuthService(c config.Config, u data.UserRepository) AuthService {
+func NewAuthService(c config.Config, u db.UserRepository) AuthService {
 	return authServiceImpl{
 		c:        c,
 		userRepo: u,

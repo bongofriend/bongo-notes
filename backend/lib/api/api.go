@@ -6,18 +6,20 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/bongofriend/bongo-notes/backend/lib/api/data"
+	"github.com/bongofriend/bongo-notes/backend/lib/api/db"
 	"github.com/bongofriend/bongo-notes/backend/lib/api/handlers"
 	"github.com/bongofriend/bongo-notes/backend/lib/api/services"
 	"github.com/bongofriend/bongo-notes/backend/lib/config"
 )
 
 func InitApi(appContext context.Context, errCh chan struct{}, doneCh chan struct{}, c config.Config) {
-	repoContainer := data.NewRepositoryContainer(c)
+	repoContainer := db.NewRepositoryContainer(c)
 	servicesContainer := services.NewServicesContainer(c, repoContainer)
 	serviceDoneCh := make(chan struct{})
 	repoDoneCh := make(chan struct{})
 	muxDoneCh := make(chan struct{})
+
+	servicesContainer.Init(appContext)
 
 	apiMux := handlers.NewApiMux(c, servicesContainer.AuthService())
 	handlers := []handlers.ApiHandler{

@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/bongofriend/bongo-notes/backend/lib/api/data"
+	"github.com/bongofriend/bongo-notes/backend/lib/api/db"
 	"github.com/bongofriend/bongo-notes/backend/lib/api/models"
 	"github.com/bongofriend/bongo-notes/backend/lib/config"
 	"github.com/google/uuid"
@@ -18,12 +18,18 @@ import (
 type NotesService interface {
 	AddNoteToNotebook(user models.User, notebookId uuid.UUID, noteTitle string, content string) error
 	FetchNotes(user models.User, notebookId uuid.UUID) ([]models.Note, error)
+	UpdateNote(user models.User, noteId uuid.UUID, newContent string) error
 }
 
 type notesServiceImpl struct {
 	config       config.Config
-	notebookRepo data.NotebooksRepository
-	notesRepo    data.NotesRepository
+	notebookRepo db.NotebooksRepository
+	notesRepo    db.NotesRepository
+}
+
+// UpdateNote implements NotesService.
+func (n notesServiceImpl) UpdateNote(user models.User, noteId uuid.UUID, newContent string) error {
+	panic("unimplemented")
 }
 
 // FetchNotes implements NotesService.
@@ -83,7 +89,7 @@ func (n notesServiceImpl) writeNoteToDisk(noteId uuid.UUID, fileContent string) 
 	return notePath, nil
 }
 
-func NewNotesService(c config.Config, r data.RepositoryContainer) NotesService {
+func NewNotesService(c config.Config, r db.RepositoryContainer) NotesService {
 	return notesServiceImpl{
 		config:       c,
 		notebookRepo: r.NotebooksRepository(),
