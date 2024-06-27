@@ -16,7 +16,7 @@ import (
 )
 
 type DiffingService interface {
-	QueueFile(pathToNewContent string, fileId uuid.UUID)
+	QueueFile(pathToNewContent string, noteId uuid.UUID)
 	Start(context context.Context)
 	done() <-chan struct{}
 }

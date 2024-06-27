@@ -50,10 +50,15 @@ func (s servicesContainerImpl) DiffingService() DiffingService {
 }
 
 func NewServicesContainer(c config.Config, r db.RepositoryContainer) ServicesContainer {
+	diffingService := NewDiffingService(c, r.DiffingRespository())
+	authService := NewAuthService(c, r.UserRepository())
+	notebooksService := NewNotebooksService(r.NotebooksRepository())
+	notesService := NewNotesService(c, diffingService, r.NotesRepository(), r.NotebooksRepository())
+
 	return servicesContainerImpl{
-		authService:      NewAuthService(c, r.UserRepository()),
-		notebooksService: NewNotebooksService(r.NotebooksRepository()),
-		notesService:     NewNotesService(c, r),
-		diffingService:   NewDiffingService(c, r.DiffingRespository()),
+		authService:      authService,
+		notebooksService: notebooksService,
+		notesService:     notesService,
+		diffingService:   diffingService,
 	}
 }

@@ -104,7 +104,40 @@ func (n notesHandler) GetNotesForNotebook(user models.User, r *http.Request) Ser
 	return Success(http.StatusOK, rsp)
 }
 
-// TODO
-func UpdateNote(user models.User, r *http.Request) ServiceResponse {
-	panic("not implemented")
+type updateNoteRequest struct {
+	Content string `json:"content"`
+}
+
+// UpdateNote godoc
+//
+//	@Summary	Update note
+//	@Tags		notes
+//	@Router		/notes/{noteId} [put]
+//	@Param		notebookId	path	string	true	"Id of Note to update"
+//
+// @Param notebookParams body handlers.updateNoteRequest true "Pramas to update Note conet"
+//
+//	@Success	200
+//	@Failure	400
+//	@Failure	500
+//	@Failure	401
+//	@Security	BearerAuth
+func (n notesHandler) UpdateNote(user models.User, r *http.Request) ServiceResponse {
+	notePathId := r.PathValue("noteId")
+	if len(notePathId) == 0 {
+		return BadRequest(nil)
+	}
+	noteId, err := uuid.Parse(notePathId)
+	if err != nil {
+		return BadRequest(err)
+	}
+	var reqBody updateNoteRequest
+	decoder := json.NewDecoder(r.Body)
+	if err := decoder.Decode(&reqBody); err != nil {
+		return BadRequest(err)
+	}
+	if err := n.notesService.UpdateNote(user, noteId, reqBody.Content); err != nil {
+		return InternalServerError(err)
+	}
+	return Accepted()
 }

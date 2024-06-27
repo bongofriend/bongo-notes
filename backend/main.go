@@ -86,6 +86,8 @@ func validateEnvironment() (string, bool) {
 
 func isCommandAvailable(cmd string) bool {
 	res, err := exec.LookPath(cmd)
-	log.Println(err)
-	return err != nil || res == ""
+	if err != nil {
+		log.Println(err)
+	}
+	return err == nil || res != ""
 }

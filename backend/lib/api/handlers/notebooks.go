@@ -35,7 +35,7 @@ type getNotebooksResponse struct {
 //	@Router		/notebooks [get]
 //	@Success	200	{object}	handlers.getNotebooksResponse
 //	@Failure	400
-//	 @Failure 401
+//	@Failure	401
 //	@Security	BearerAuth
 func (n notebooksHandler) GetNotebooks(user models.User, r *http.Request) ServiceResponse {
 	notebooks, err := n.notebooksService.FetchNotebooks(user)
@@ -55,14 +55,14 @@ type createNewnNotebookRequest struct {
 
 // CreateNewNotebooks godoc
 //
-//		@Summary	Create new notebook
-//		@Tags		notebooks
-//		@Router		/notebooks [post]
-//		@Param		noteboolDetails	body	handlers.createNewnNotebookRequest	true	"Parameters for creating a new new notebook"
-//		@Success	200
-//		@Failure	400
-//	 @Failure 401
-//		@Security	BearerAuth
+//	@Summary	Create new notebook
+//	@Tags		notebooks
+//	@Router		/notebooks [post]
+//	@Param		noteboolDetails	body	handlers.createNewnNotebookRequest	true	"Parameters for creating a new new notebook"
+//	@Success	200
+//	@Failure	400
+//	@Failure	401
+//	@Security	BearerAuth
 func (n notebooksHandler) CreateNewNotebook(user models.User, r *http.Request) ServiceResponse {
 	decoder := json.NewDecoder(r.Body)
 	var params createNewnNotebookRequest

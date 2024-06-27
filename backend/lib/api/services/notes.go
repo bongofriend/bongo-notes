@@ -1,6 +1,8 @@
 package services
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -22,14 +24,10 @@ type NotesService interface {
 }
 
 type notesServiceImpl struct {
-	config       config.Config
-	notebookRepo db.NotebooksRepository
-	notesRepo    db.NotesRepository
-}
-
-// UpdateNote implements NotesService.
-func (n notesServiceImpl) UpdateNote(user models.User, noteId uuid.UUID, newContent string) error {
-	panic("unimplemented")
+	config         config.Config
+	notebookRepo   db.NotebooksRepository
+	notesRepo      db.NotesRepository
+	diffingService DiffingService
 }
 
 // FetchNotes implements NotesService.
@@ -57,7 +55,7 @@ func (n notesServiceImpl) AddNoteToNotebook(user models.User, notebookId uuid.UU
 		return fmt.Errorf("user %d has not ownership of notebook %d", user.Id, notebookId)
 	}
 	noteId := uuid.New()
-	filePath, err := n.writeNoteToDisk(noteId, content)
+	filePath, err := n.writeNewNoteToDisk(noteId, content)
 	if err != nil {
 		return err
 	}
@@ -70,7 +68,7 @@ func isValidNote(content string) (bool, error) {
 	return true, nil
 }
 
-func (n notesServiceImpl) writeNoteToDisk(noteId uuid.UUID, fileContent string) (string, error) {
+func (n notesServiceImpl) writeNewNoteToDisk(noteId uuid.UUID, fileContent string) (string, error) {
 	notePath := filepath.Join(n.config.NotesFolderPath, noteId.String())
 	if err := os.MkdirAll(notePath, 0777); err != nil {
 		return "", err
@@ -89,10 +87,59 @@ func (n notesServiceImpl) writeNoteToDisk(noteId uuid.UUID, fileContent string) 
 	return notePath, nil
 }
 
-func NewNotesService(c config.Config, r db.RepositoryContainer) NotesService {
+// UpdateNote implements NotesService.
+func (n notesServiceImpl) UpdateNote(user models.User, noteId uuid.UUID, newContent string) error {
+	ok, err := isValidNote(newContent)
+	if err != nil {
+		return err
+	}
+	if !ok {
+		return fmt.Errorf("invalid content for note %s", noteId)
+	}
+	newContentPath, err := n.writeTempNoteToDisk(newContent)
+	if err != nil {
+		return err
+	}
+	n.diffingService.QueueFile(newContentPath, noteId)
+	return nil
+}
+
+func (n notesServiceImpl) writeTempNoteToDisk(content string) (string, error) {
+	notesTempPath := filepath.Join(n.config.NotesFolderPath, "temp")
+	if err := os.MkdirAll(notesTempPath, 0755); err != nil {
+		return "", err
+	}
+	contentHash, err := getHashByContent(strings.NewReader(content))
+	if err != nil {
+		return "", err
+	}
+	newNoteContentPath := filepath.Join(notesTempPath, contentHash)
+	file, err := os.Create(newNoteContentPath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+	buf := make([]byte, 1024*1024)
+	if _, err := io.CopyBuffer(file, strings.NewReader(content), buf); err != nil {
+		return "", err
+	}
+	return newNoteContentPath, nil
+}
+
+func getHashByContent(r io.Reader) (string, error) {
+	buff := make([]byte, 1024*1024)
+	hash := sha1.New()
+	if _, err := io.CopyBuffer(hash, r, buff); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
+func NewNotesService(c config.Config, diffService DiffingService, notesRepo db.NotesRepository, notebookRepo db.NotebooksRepository) NotesService {
 	return notesServiceImpl{
-		config:       c,
-		notebookRepo: r.NotebooksRepository(),
-		notesRepo:    r.NotesRepository(),
+		config:         c,
+		notebookRepo:   notebookRepo,
+		notesRepo:      notesRepo,
+		diffingService: diffService,
 	}
 }
