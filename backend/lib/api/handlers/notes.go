@@ -112,7 +112,7 @@ type updateNoteRequest struct {
 //
 //	@Summary	Update note
 //	@Tags		notes
-//	@Router		/notes/{noteId} [put]
+//	@Router		/notes/{notebookId}/{noteId} [put]
 //	@Param		notebookId	path	string	true	"Id of Note to update"
 //
 // @Param notebookParams body handlers.updateNoteRequest true "Pramas to update Note conet"
@@ -123,6 +123,14 @@ type updateNoteRequest struct {
 //	@Failure	401
 //	@Security	BearerAuth
 func (n notesHandler) UpdateNote(user models.User, r *http.Request) ServiceResponse {
+	notebookPathId := r.PathValue("notebookId")
+	if len(notebookPathId) == 0 {
+		return BadRequest(nil)
+	}
+	notebookId, err := uuid.Parse(notebookPathId)
+	if err != nil {
+		return BadRequest(nil)
+	}
 	notePathId := r.PathValue("noteId")
 	if len(notePathId) == 0 {
 		return BadRequest(nil)
@@ -136,7 +144,7 @@ func (n notesHandler) UpdateNote(user models.User, r *http.Request) ServiceRespo
 	if err := decoder.Decode(&reqBody); err != nil {
 		return BadRequest(err)
 	}
-	if err := n.notesService.UpdateNote(user, noteId, reqBody.Content); err != nil {
+	if err := n.notesService.UpdateNote(user, noteId, notebookId, reqBody.Content); err != nil {
 		return InternalServerError(err)
 	}
 	return Accepted()

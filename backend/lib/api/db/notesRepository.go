@@ -11,6 +11,7 @@ import (
 type NotesRepository interface {
 	AddNote(notebookId uuid.UUID, noteId uuid.UUID, title string, path string) error
 	GetNotesForNotebook(notebookId uuid.UUID) ([]models.Note, error)
+	IsNotePartOfNotebook(userId uuid.UUID, notebookId uuid.UUID, noteId uuid.UUID) (bool, error)
 }
 
 type notesRepositoryImpl struct {
@@ -21,6 +22,20 @@ type noteEntity struct {
 	Id    int    `db:"rowid"`
 	UUID  string `db:"id"`
 	Title string `db:"title"`
+}
+
+// IsNotePartOfNotebook implements NotesRepository.
+func (n notesRepositoryImpl) IsNotePartOfNotebook(userId uuid.UUID, notebookId uuid.UUID, noteId uuid.UUID) (bool, error) {
+	var count int32
+	if err := n.db.Get(&count,
+		`Select COUNT(*) 
+		FROM notes 
+		JOIN notebooks on notebooks.id = notes.notebook_id 
+		JOIN users on users.id = notebooks.creater_id;
+		WHERE user.id = $1 and notebooks.id = $2 and notes.id = $3 `, userId, noteId, notebookId); err != nil {
+		return false, err
+	}
+	return count == 1, nil
 }
 
 // GetNotesForNotebook implements NotesRepository.

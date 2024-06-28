@@ -20,7 +20,7 @@ import (
 type NotesService interface {
 	AddNoteToNotebook(user models.User, notebookId uuid.UUID, noteTitle string, content string) error
 	FetchNotes(user models.User, notebookId uuid.UUID) ([]models.Note, error)
-	UpdateNote(user models.User, noteId uuid.UUID, newContent string) error
+	UpdateNote(user models.User, notebookId uuid.UUID, noteId uuid.UUID, notebookIdnewContent string) error
 }
 
 type notesServiceImpl struct {
@@ -88,7 +88,14 @@ func (n notesServiceImpl) writeNewNoteToDisk(noteId uuid.UUID, fileContent strin
 }
 
 // UpdateNote implements NotesService.
-func (n notesServiceImpl) UpdateNote(user models.User, noteId uuid.UUID, newContent string) error {
+func (n notesServiceImpl) UpdateNote(user models.User, notebookdId uuid.UUID, noteId uuid.UUID, newContent string) error {
+	isPartOfNotebook, err := n.notesRepo.IsNotePartOfNotebook(user.Id, notebookdId, noteId)
+	if err != nil {
+		return err
+	}
+	if !isPartOfNotebook {
+		return fmt.Errorf("wrong note access: User-Id %s Notebook-Id %s Note-Id %s", user.Id, notebookdId, noteId)
+	}
 	ok, err := isValidNote(newContent)
 	if err != nil {
 		return err
