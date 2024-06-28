@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -13,6 +14,10 @@ import (
 	"github.com/bongofriend/bongo-notes/backend/lib/api/db"
 	"github.com/bongofriend/bongo-notes/backend/lib/config"
 	"github.com/google/uuid"
+)
+
+const (
+	errorExitCode int = 2
 )
 
 type DiffingService interface {
@@ -65,6 +70,9 @@ func (d diffingServiceImpl) processJob(job diffingJob) error {
 	if err := d.diffingRepo.AddDiff(job.noteId, diffId); err != nil {
 		return err
 	}
+	if err := d.updateNoteContent(job.noteId, job.newContentPath); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -82,30 +90,46 @@ func (d diffingServiceImpl) generatedDiff(newContentPath string, noteId uuid.UUI
 		return uuid.Nil, fmt.Errorf("current state for note %s could not be found in %s", noteId.String(), notesPath)
 	}
 	cmd := exec.Command("diff", newContentPath, currentNotePath)
-	if err := cmd.Run(); err != nil {
-		return uuid.Nil, err
+	output, _ := cmd.Output()
+	exitCode := cmd.ProcessState.ExitCode()
+	if exitCode == errorExitCode {
+		diffError := errors.New(string(output))
+		return uuid.Nil, fmt.Errorf("could not diff: %w", diffError)
 	}
+
 	diffPath := filepath.Join(notesPath, "diffs")
 	if err := os.MkdirAll(diffPath, 0755); err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, fmt.Errorf("could not diff: %w", err)
 	}
 	diffId := uuid.New()
 	diffFilePath := filepath.Join(diffPath, fmt.Sprintf("%s.diff", diffId))
 	diffFile, err := os.Create(diffFilePath)
 	if err != nil {
-		return uuid.Nil, err
+		return uuid.Nil, fmt.Errorf("could not diff: %w", err)
 	}
 	defer diffFile.Close()
-	cmdOutput, err := cmd.Output()
-	if err != nil {
-		return uuid.Nil, err
-	}
 	buf := make([]byte, 1024*1024)
-	if _, err := io.CopyBuffer(diffFile, bytes.NewReader(cmdOutput), buf); err != nil {
+	if _, err := io.CopyBuffer(diffFile, bytes.NewReader(output), buf); err != nil {
 		return uuid.Nil, err
 	}
 	return diffId, nil
+}
 
+func (d diffingServiceImpl) updateNoteContent(noteId uuid.UUID, newContentPath string) error {
+	if _, err := os.Stat(newContentPath); os.IsNotExist(err) {
+		return fmt.Errorf("no content at %s", newContentPath)
+	}
+	recentNotePath := filepath.Join(d.config.NotesFolderPath, noteId.String(), "recent")
+	if _, err := os.Stat(recentNotePath); os.IsNotExist(err) {
+		return fmt.Errorf("note not found at %s", recentNotePath)
+	}
+	if err := os.Remove(recentNotePath); err != nil {
+		return err
+	}
+	if err := os.Rename(newContentPath, recentNotePath); err != nil {
+		return err
+	}
+	return nil
 }
 
 // QueueFile implements DiffinggService.

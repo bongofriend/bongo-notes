@@ -15,7 +15,15 @@ type diffingRepositoryImpl struct {
 
 // AddDiff implements DiffingRepository.
 func (d diffingRepositoryImpl) AddDiff(noteId uuid.UUID, diffId uuid.UUID) error {
-	panic("unimplemented")
+	tx, err := d.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Commit()
+	if _, err := tx.Exec(`INSERT INTO note_diffs(id, note_id) VALUES($1, $2)`, diffId, noteId); err != nil {
+		return err
+	}
+	return nil
 }
 
 func NewDiffingRepository(db *sqlx.DB) DiffingRepository {

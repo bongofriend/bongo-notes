@@ -79,6 +79,7 @@ func (n notesServiceImpl) writeNewNoteToDisk(noteId uuid.UUID, fileContent strin
 		return "", err
 	}
 	defer file.Close()
+	adjustLineBreak(&fileContent)
 	reader := strings.NewReader(fileContent)
 	_, err = io.Copy(file, reader)
 	if err != nil {
@@ -126,6 +127,7 @@ func (n notesServiceImpl) writeTempNoteToDisk(content string) (string, error) {
 		return "", err
 	}
 	defer file.Close()
+	adjustLineBreak(&content)
 	buf := make([]byte, 1024*1024)
 	if _, err := io.CopyBuffer(file, strings.NewReader(content), buf); err != nil {
 		return "", err
@@ -140,6 +142,13 @@ func getHashByContent(r io.Reader) (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
+func adjustLineBreak(s *string) {
+	if strings.HasSuffix(*s, "\n") {
+		return
+	}
+	*s = *s + "\n"
 }
 
 func NewNotesService(c config.Config, diffService DiffingService, notesRepo db.NotesRepository, notebookRepo db.NotebooksRepository) NotesService {

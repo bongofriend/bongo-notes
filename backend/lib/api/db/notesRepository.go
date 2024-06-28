@@ -31,8 +31,8 @@ func (n notesRepositoryImpl) IsNotePartOfNotebook(userId uuid.UUID, notebookId u
 		`Select COUNT(*) 
 		FROM notes 
 		JOIN notebooks on notebooks.id = notes.notebook_id 
-		JOIN users on users.id = notebooks.creater_id;
-		WHERE user.id = $1 and notebooks.id = $2 and notes.id = $3 `, userId, noteId, notebookId); err != nil {
+		JOIN users on users.id = notebooks.creater_id
+		WHERE users.id = $1 and notebooks.id = $2 and notes.id = $3`, userId.String(), notebookId.String(), noteId.String()); err != nil {
 		return false, err
 	}
 	return count == 1, nil

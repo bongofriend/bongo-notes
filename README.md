@@ -2,6 +2,10 @@
 
 This is a personal project for personal note taking written with a golang backend
 
+## TODO
+
+- [ ] Wrap errors for better logging
+
 ## Requirements
 
 * golang >= 1.22

@@ -17,6 +17,7 @@ type notesHandler struct {
 func (n notesHandler) Register(m *ApiMux) {
 	m.AuthenticatedServiceResponseHandlerFunc("POST /notes/{notebookId}", n.CreateNewNote)
 	m.AuthenticatedServiceResponseHandlerFunc("GET /notes/{notebookId}", n.GetNotesForNotebook)
+	m.AuthenticatedServiceResponseHandlerFunc("PUT /notes/{notebookId}/{noteId}", n.UpdateNote)
 }
 
 func NewNotesHandler(s services.ServicesContainer) ApiHandler {
@@ -113,10 +114,9 @@ type updateNoteRequest struct {
 //	@Summary	Update note
 //	@Tags		notes
 //	@Router		/notes/{notebookId}/{noteId} [put]
-//	@Param		notebookId	path	string	true	"Id of Note to update"
-//
-// @Param notebookParams body handlers.updateNoteRequest true "Pramas to update Note conet"
-//
+//	@Param		notebookId		path	string						true	"Id of Notebook which Note is part of"
+//	@Param		noteId			path	string						true	"Id of note to update"
+//	@Param		notebookParams	body	handlers.updateNoteRequest	true	"Pramas to update Note conet"
 //	@Success	200
 //	@Failure	400
 //	@Failure	500
@@ -144,7 +144,7 @@ func (n notesHandler) UpdateNote(user models.User, r *http.Request) ServiceRespo
 	if err := decoder.Decode(&reqBody); err != nil {
 		return BadRequest(err)
 	}
-	if err := n.notesService.UpdateNote(user, noteId, notebookId, reqBody.Content); err != nil {
+	if err := n.notesService.UpdateNote(user, notebookId, noteId, reqBody.Content); err != nil {
 		return InternalServerError(err)
 	}
 	return Accepted()
