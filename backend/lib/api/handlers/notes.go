@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/bongofriend/bongo-notes/backend/lib/api/models"
 	"github.com/bongofriend/bongo-notes/backend/lib/api/services"
+	httputils "github.com/bongofriend/bongo-notes/backend/lib/api/utils"
 	"github.com/google/uuid"
 )
 
@@ -18,6 +20,7 @@ func (n notesHandler) Register(m *ApiMux) {
 	m.AuthenticatedServiceResponseHandlerFunc("POST /notes/{notebookId}", n.CreateNewNote)
 	m.AuthenticatedServiceResponseHandlerFunc("GET /notes/{notebookId}", n.GetNotesForNotebook)
 	m.AuthenticatedServiceResponseHandlerFunc("PUT /notes/{notebookId}/{noteId}", n.UpdateNote)
+	m.AuthenticatedHandlerFunc("GET /notes/{notebookId}/{noteid}", n.GetNote)
 }
 
 func NewNotesHandler(s services.ServicesContainer) ApiHandler {
@@ -148,4 +151,78 @@ func (n notesHandler) UpdateNote(user models.User, r *http.Request) ServiceRespo
 		return InternalServerError(err)
 	}
 	return Accepted()
+}
+
+// GetNote godoc
+//
+//	@Summary	Get note
+//	@Tags		notes
+//	@Router		/notes/{notebookId}/{noteId} [get]
+//	@Param		notebookId	path	string	true	"Id of Notebook which Note is part of"
+//	@Param		noteId		path	string	true	"Id of note to read"
+//	@Param		diffId		query	string	false	"Id of diff"
+//	@Produce plain
+//	@Success	200
+//	@Failure	400
+//	@Failure	500
+//	@Failure	401
+//	@Security	BearerAuth
+func (n notesHandler) GetNote(user models.User, w http.ResponseWriter, r *http.Request) {
+	notebookPathId := r.PathValue("notebookId")
+	if len(notebookPathId) == 0 {
+		log.Println("No notebookPath found")
+		httputils.BadRequestError(w)
+		return
+	}
+	notebookId, err := uuid.Parse(notebookPathId)
+	if err != nil {
+		log.Println(err)
+		httputils.BadRequestError(w)
+		return
+	}
+	notePathId := r.PathValue("nodeId")
+	if len(notePathId) == 0 {
+		log.Println("No noteId found")
+		httputils.BadRequestError(w)
+		return
+	}
+	noteId, err := uuid.Parse(notePathId)
+	if err != nil {
+		log.Println(err)
+		httputils.BadRequestError(w)
+		return
+	}
+	diffQueryId := r.URL.Query().Get("diff")
+	if len(diffQueryId) == 0 {
+		content, err := n.notesService.GetNote(user, notebookId, noteId)
+		if err != nil {
+			log.Println(err)
+			httputils.InternalServerError(w)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write(content); err != nil {
+			log.Println(err)
+			httputils.InternalServerError(w)
+		}
+	} else {
+		diffId, err := uuid.Parse(diffQueryId)
+		if err != nil {
+			log.Println(err)
+			httputils.InternalServerError(w)
+			return
+		}
+		content, err := n.notesService.GetPatchedNote(user, notebookId, noteId, diffId)
+		if err != nil {
+			log.Println(err)
+			httputils.InternalServerError(w)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write(content); err != nil {
+			log.Println(err)
+			httputils.InternalServerError(w)
+		}
+	}
+
 }

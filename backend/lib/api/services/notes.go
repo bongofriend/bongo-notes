@@ -21,6 +21,8 @@ type NotesService interface {
 	AddNoteToNotebook(user models.User, notebookId uuid.UUID, noteTitle string, content string) error
 	FetchNotes(user models.User, notebookId uuid.UUID) ([]models.Note, error)
 	UpdateNote(user models.User, notebookId uuid.UUID, noteId uuid.UUID, notebookIdnewContent string) error
+	GetNote(user models.User, notebookId uuid.UUID, noteId uuid.UUID) ([]byte, error)
+	GetPatchedNote(user models.User, notebookId uuid.UUID, noteId uuid.UUID, diffId uuid.UUID) ([]byte, error)
 }
 
 type notesServiceImpl struct {
@@ -28,6 +30,43 @@ type notesServiceImpl struct {
 	notebookRepo   db.NotebooksRepository
 	notesRepo      db.NotesRepository
 	diffingService DiffingService
+}
+
+// GetPatchedNote implements NotesService.
+func (n notesServiceImpl) GetPatchedNote(user models.User, notebookId uuid.UUID, noteId uuid.UUID, diffId uuid.UUID) ([]byte, error) {
+	panic("unimplemented")
+}
+
+// GetNote implements NotesService.
+func (n notesServiceImpl) GetNote(user models.User, notebookId uuid.UUID, noteId uuid.UUID) ([]byte, error) {
+	isPartOf, err := n.notesRepo.IsNotePartOfNotebook(user.Id, notebookId, noteId)
+	if err != nil {
+		return nil, fmt.Errorf("could validate note ownershio: %w", err)
+	}
+	if !isPartOf {
+		return nil, fmt.Errorf("user %s has not ownership of note %s", user.Id.String(), noteId.String())
+	}
+	return n.readMostRecentNoteVersion(noteId)
+}
+
+func (n notesServiceImpl) readMostRecentNoteVersion(noteId uuid.UUID) ([]byte, error) {
+	notePath := filepath.Join(n.config.NotesFolderPath, noteId.String(), "recent")
+	stat, err := os.Stat(notePath)
+	if err != nil {
+		return nil, fmt.Errorf("could not read note: %w", err)
+	}
+	if !stat.Mode().IsRegular() {
+		return nil, fmt.Errorf("%s is not a note", notePath)
+	}
+	file, err := os.Open(notePath)
+	if err != nil {
+		return nil, fmt.Errorf("could not open note: %w", err)
+	}
+	content, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+	return content, nil
 }
 
 // FetchNotes implements NotesService.
